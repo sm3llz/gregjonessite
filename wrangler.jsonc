@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "gregjonessite",
+  "compatibility_date": "2025-06-01",
+  // Static Astro site: no Worker entry-point. Serve the built `dist/`
+  // directory as static assets (Cloudflare Workers Static Assets).
+  "assets": {
+    "directory": "./dist"
+  },
+  // Build the static output before upload, so `dist/` always exists in CI.
+  "build": {
+    "command": "npm run build"
+  }
+}
