@@ -38,17 +38,23 @@ let hIdx = -1;
 })();
 
 /* ---------------- enter the system ---------------- */
+let entered = false;
 function enterSystem() {
+  if (entered) return;
+  entered = true;
   el.boot.style.transition = 'opacity 420ms ease';
   el.boot.style.opacity = '0';
   setTimeout(() => {
     el.boot.hidden = true;
+    el.boot.style.display = 'none';   // force out of layout (class display:grid overrides [hidden])
     el.system.hidden = false;
-    el.input.focus();
+    window.scrollTo(0, 0);
+    try { el.input.focus({ preventScroll: true }); } catch (_) {}
     bootLog();
   }, reduce ? 0 : 420);
 }
 el.enter.addEventListener('click', enterSystem);
+el.enter.addEventListener('touchend', (e) => { e.preventDefault(); enterSystem(); }, { passive: false });
 // Pressing Enter on the boot screen also enters.
 document.addEventListener('keydown', (e) => {
   if (!el.boot.hidden && e.key === 'Enter') enterSystem();
