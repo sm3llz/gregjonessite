@@ -1,0 +1,196 @@
+---
+import Base from '../layouts/Base.astro';
+import { identity, commands, sections, status, askGreg } from '../data/content.js';
+
+// Serialize the data layer once so the client terminal and the static
+// (SEO / no-JS) content share a single source of truth.
+const siteData = { identity, commands, sections, status, askGreg };
+---
+
+<Base>
+  <!-- ============ BOOT / COMMAND INTERFACE ============ -->
+  <section id="boot" class="boot" aria-label="Entry">
+    <div class="shell boot__inner">
+      <p class="boot__sys mono muted">[ gregjones.io · secure session established ]</p>
+      <h1 class="boot__name mono">{identity.name}</h1>
+      <p class="boot__tag">{identity.tagline}</p>
+      <p class="boot__pillars mono muted">
+        {identity.pillars.join('  ·  ')}
+      </p>
+      <p class="boot__prompt mono">
+        <span class="faint">greg@system</span><span class="muted">:</span><span class="accent">~</span><span class="muted">$</span>
+        <span class="boot__typed" id="bootTyped"></span><span class="cursor" aria-hidden="true"></span>
+      </p>
+      <button class="btn boot__enter" id="enterBtn" aria-controls="system">Enter System →</button>
+    </div>
+  </section>
+
+  <!-- ============ SYSTEM / TERMINAL ============ -->
+  <main id="system" class="system" hidden aria-label="System">
+    <div class="shell">
+      <div class="term" role="region" aria-label="Command terminal">
+        <header class="term__bar">
+          <span class="term__dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="term__title mono muted">greg@gregjones.io — system</span>
+          <span class="term__live mono"><span class="dot" aria-hidden="true"></span>OPERATIONAL</span>
+        </header>
+
+        <nav class="term__menu mono" aria-label="Commands" id="menu">
+          {commands.map((c) => (
+            <button class="chip" data-cmd={c.cmd} title={c.desc}>{c.label}</button>
+          ))}
+        </nav>
+
+        <div class="term__out" id="output" tabindex="0" aria-live="polite"></div>
+
+        <form class="term__input" id="inputForm" autocomplete="off">
+          <label for="cmd" class="mono prompt-label">
+            <span class="faint" id="promptUser">greg@system</span><span class="muted">:</span><span class="accent">~</span><span class="muted">$</span>
+          </label>
+          <input id="cmd" name="cmd" class="mono" type="text" spellcheck="false"
+                 autocapitalize="off" placeholder="type a command, or `help`" aria-label="Command input" />
+        </form>
+      </div>
+      <footer class="term__foot mono faint">
+        <span>© {new Date().getFullYear()} Greg Jones</span>
+        <span>type <span class="muted">help</span> · <span class="muted">clear</span> · <span class="muted">exit</span></span>
+      </footer>
+    </div>
+  </main>
+
+  <!-- ============ STATIC FALLBACK (no-JS / SEO) ============ -->
+  <noscript>
+    <div class="shell" style="padding:64px 24px;">
+      <h2 class="mono accent">{sections.about.title}</h2>
+      {sections.about.body.map((p) => <p>{p}</p>)}
+      <h2 class="mono accent">{sections.capital.title}</h2>
+      {sections.capital.body.map((p) => <p>{p}</p>)}
+      <h2 class="mono accent">{sections.principles.title}</h2>
+      <ul>{sections.principles.items.map((i) => <li>{i}</li>)}</ul>
+      <h2 class="mono accent">{sections.contact.title}</h2>
+      {sections.contact.body.map((p) => <p>{p}</p>)}
+      <p><a href={`mailto:${identity.email}`}>{identity.email}</a></p>
+    </div>
+  </noscript>
+
+  <script type="application/json" id="site-data" set:html={JSON.stringify(siteData)}></script>
+  <script src="/terminal.js" type="module"></script>
+</Base>
+
+<style>
+  /* ---------- boot ---------- */
+  .boot {
+    min-height: 100svh;
+    display: grid;
+    place-items: center;
+    text-align: left;
+    animation: fade 600ms ease both;
+  }
+  .boot__inner { width: 100%; max-width: 720px; }
+  .boot__sys { font-size: 12px; letter-spacing: 0.14em; margin: 0 0 28px; opacity: 0; animation: fade 700ms 120ms ease forwards; }
+  .boot__name {
+    font-size: clamp(40px, 9vw, 88px);
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    margin: 0;
+    opacity: 0; transform: translateY(8px);
+    animation: rise 700ms 200ms cubic-bezier(0.22,1,0.36,1) forwards;
+  }
+  .boot__tag {
+    font-size: clamp(18px, 3.2vw, 26px);
+    color: var(--text);
+    margin: 22px 0 0;
+    opacity: 0; transform: translateY(8px);
+    animation: rise 700ms 360ms cubic-bezier(0.22,1,0.36,1) forwards;
+  }
+  .boot__pillars { font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase; margin: 16px 0 0; opacity: 0; animation: fade 700ms 520ms ease forwards; }
+  .boot__prompt { font-size: 14px; margin: 40px 0 0; opacity: 0; animation: fade 700ms 680ms ease forwards; }
+  .boot__typed { color: var(--accent); }
+  .boot__enter { margin-top: 36px; opacity: 0; animation: fade 700ms 900ms ease forwards; }
+
+  /* ---------- system ---------- */
+  .system { min-height: 100svh; padding: 6vh 0 4vh; animation: fade 500ms ease both; }
+  .term {
+    background: linear-gradient(180deg, var(--bg-raise), var(--bg-card));
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    box-shadow: 0 30px 80px -40px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,255,255,0.03);
+    overflow: hidden;
+  }
+  .term__bar {
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--line);
+    background: rgba(255,255,255,0.015);
+  }
+  .term__dots { display: inline-flex; gap: 7px; }
+  .term__dots i { width: 10px; height: 10px; border-radius: 50%; background: var(--faint); opacity: 0.5; }
+  .term__title { font-size: 12px; flex: 1; }
+  .term__live { font-size: 11px; letter-spacing: 0.12em; color: var(--accent); display: inline-flex; align-items: center; gap: 7px; }
+  .term__live .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 10px var(--accent-glow); animation: pulse 2s ease-in-out infinite; }
+
+  .term__menu { display: flex; flex-wrap: wrap; gap: 8px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+  .chip {
+    font-family: var(--mono); font-size: 12.5px; letter-spacing: 0.03em;
+    color: var(--muted); background: transparent;
+    border: 1px solid var(--line-2); border-radius: 999px;
+    padding: 6px 13px; cursor: pointer;
+    transition: color var(--t), border-color var(--t), background var(--t);
+  }
+  .chip:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-dim); }
+
+  .term__out {
+    font-family: var(--mono);
+    font-size: 14px; line-height: 1.75;
+    padding: 22px 18px;
+    height: min(56vh, 560px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--line-2) transparent;
+  }
+  .term__out::-webkit-scrollbar { width: 8px; }
+  .term__out::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 8px; }
+
+  .term__input { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-top: 1px solid var(--line); }
+  .prompt-label { font-size: 14px; white-space: nowrap; }
+  #cmd { flex: 1; background: transparent; border: 0; color: var(--text); font-size: 14px; padding: 4px 0; }
+  #cmd::placeholder { color: var(--faint); }
+  #cmd:focus { outline: none; }
+
+  .term__foot { display: flex; justify-content: space-between; font-size: 11px; padding: 14px 4px 0; letter-spacing: 0.04em; }
+
+  /* ---------- output line primitives (used by terminal.js) ---------- */
+  :global(.ln) { opacity: 0; transform: translateY(3px); animation: rise 360ms ease forwards; }
+  :global(.ln--cmd) { color: var(--muted); }
+  :global(.ln--cmd b) { color: var(--accent); font-weight: 500; }
+  :global(.ln--head) { color: var(--accent); letter-spacing: 0.18em; margin: 6px 0 10px; font-size: 12px; }
+  :global(.ln--body) { color: var(--text); }
+  :global(.ln--mute) { color: var(--muted); }
+  :global(.ln--quote) { color: var(--text); border-left: 2px solid var(--accent); padding-left: 14px; margin: 4px 0; }
+  :global(.ln--li) { color: var(--text); }
+  :global(.ln--li i) { color: var(--accent); font-style: normal; margin-right: 10px; }
+  :global(.ln--gap) { height: 10px; }
+  :global(.ln a) { color: var(--accent); border-bottom: 1px solid var(--accent-dim); }
+  :global(.ln a:hover) { border-color: var(--accent); }
+  :global(.sg) { color: var(--muted); cursor: pointer; border: 1px dashed var(--line-2); border-radius: 6px; padding: 3px 9px; margin: 3px 6px 3px 0; display: inline-block; transition: color var(--t), border-color var(--t); }
+  :global(.sg:hover) { color: var(--accent); border-color: var(--accent); }
+
+  /* ---------- status dashboard ---------- */
+  :global(.grid) { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 12px 0 4px; }
+  :global(.metric) { border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; background: rgba(255,255,255,0.012); }
+  :global(.metric__label) { color: var(--muted); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+  :global(.metric__val) { color: var(--text); font-size: 26px; margin-top: 6px; font-variant-numeric: tabular-nums; }
+  :global(.metric__val b) { color: var(--accent); font-weight: 500; }
+  :global(.statusbar) { display: flex; align-items: center; gap: 10px; margin-top: 14px; color: var(--accent); }
+  :global(.statusbar .dot) { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 12px var(--accent-glow); animation: pulse 2s ease-in-out infinite; }
+
+  @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+  @media (max-width: 560px) {
+    .term__out { height: 60vh; font-size: 13px; }
+    .term__title { display: none; }
+  }
+</style>
