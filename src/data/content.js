@@ -84,15 +84,18 @@ export const sections = {
  * expected response shape is documented in README.md (Connecting real data).
  */
 export const status = {
-  source: null,
+  // Live: pulls the real dashboard.gregjones.io headline metrics from the
+  // Supabase-backed public endpoint. Falls back to the `base` values below
+  // if the request fails. Numbers match dashboard.gregjones.io 1:1.
+  source: 'https://wsyfqadzlizhkauyfpbr.supabase.co/functions/v1/public-metrics',
   systemStatus: 'OPERATIONAL',
   metrics: [
-    { key: 'automations_running', label: 'Automations running',  base: 47,     drift: 3,    format: 'int' },
-    { key: 'hours_reclaimed',     label: 'Hours reclaimed (YTD)', base: 4120,   drift: 6,    format: 'int' },
-    { key: 'documents_processed', label: 'Documents processed',  base: 318740, drift: 40,   format: 'int' },
-    { key: 'signals_monitored',   label: 'Signals monitored',    base: 1284,   drift: 12,   format: 'int' },
-    { key: 'active_workflows',    label: 'Active workflows',      base: 63,     drift: 2,    format: 'int' },
-    { key: 'uptime',              label: 'System uptime',        base: 99.98,  drift: 0.01, format: 'pct' },
+    { key: 'active_automations',    label: 'Active automations',    base: 18,   drift: 0, format: 'int' },
+    { key: 'active_agents',         label: 'Active agents',         base: 5,    drift: 0, format: 'int' },
+    { key: 'executions_this_month', label: 'Executions this month', base: 41,   drift: 0, format: 'int' },
+    { key: 'connected_systems',     label: 'Connected systems',     base: 23,   drift: 0, format: 'int' },
+    { key: 'hours_saved_month',     label: 'Hours saved (30d)',     base: 10.1, drift: 0, format: 'dec' },
+    { key: 'success_rate',          label: 'Success rate',          base: 100,  drift: 0, format: 'pct' },
   ],
 };
 

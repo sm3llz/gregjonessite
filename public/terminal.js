@@ -194,6 +194,7 @@ function printContact() {
 /* ---------------- status dashboard ---------------- */
 function fmt(v, format) {
   if (format === 'pct') return v.toFixed(2) + '%';
+  if (format === 'dec') return v.toFixed(1);
   return Math.round(v).toLocaleString('en-US');
 }
 
