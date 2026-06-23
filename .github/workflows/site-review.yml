@@ -1,0 +1,109 @@
+name: 60-Day Site Review
+
+# Runs every 60 days: verifies the build, checks dependencies, and opens a
+# review issue pre-filled with the SITE_REVIEW.md checklist.
+# Also runnable on demand from the Actions tab.
+
+on:
+  schedule:
+    # Every 60 days ≈ day-of-month 1 of alternating months. Cron has no
+    # native "every 60 days", so this fires on the 1st of Jan/Mar/May/Jul/Sep/Nov
+    # (~60-day spacing). Adjust months to taste.
+    - cron: '0 9 1 1,3,5,7,9,11 *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  checks:
+    name: Build & dependency checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install
+        run: npm ci || npm install
+
+      - name: Lint / type check
+        run: npm run lint --if-present
+        continue-on-error: true
+
+      - name: Build
+        run: npm run build
+
+      - name: Dependency audit
+        run: npm audit --omit=dev || true
+
+      - name: Outdated dependencies
+        run: npm outdated || true
+
+  open-review-issue:
+    name: Open review issue
+    needs: checks
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create 60-Day Site Review issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let checklist = '';
+            try {
+              const md = fs.readFileSync('SITE_REVIEW.md', 'utf8');
+              const start = md.indexOf('## Review checklist');
+              const end = md.indexOf('## Changelog');
+              checklist = (start !== -1 && end !== -1)
+                ? md.slice(start, end).trim()
+                : md;
+            } catch (e) {
+              checklist = 'See SITE_REVIEW.md for the full checklist.';
+            }
+
+            const date = new Date().toISOString().slice(0, 10);
+            const buildStatus = '${{ needs.checks.result }}';
+            const title = `60-Day Site Review — ${date}`;
+
+            const body = [
+              `Automated 60-day review for **gregjones.io**.`,
+              ``,
+              `- Build & dependency check job: **${buildStatus}**`,
+              `- Run Lighthouse on the live site (target 95+).`,
+              `- Update the changelog and backlog in \`SITE_REVIEW.md\` when done.`,
+              ``,
+              `---`,
+              ``,
+              checklist,
+              ``,
+              `---`,
+              `_Opened automatically by \`.github/workflows/site-review.yml\`._`,
+            ].join('\n');
+
+            // Avoid duplicate open review issues.
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'site-review',
+            });
+            if (existing.data.length > 0) {
+              core.info('An open site-review issue already exists; skipping.');
+              return;
+            }
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              body,
+              labels: ['site-review'],
+            });
