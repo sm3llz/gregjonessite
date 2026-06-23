@@ -10,7 +10,7 @@ export const identity = {
   name: 'GREG JONES',
   tagline: 'Building systems that compound.',
   pillars: ['Family Office', 'Venture Capital', 'Automation'],
-  email: 'gregj@swsventurecap.com',
+  email: 'admin@gregjones.io',
 };
 
 /** Order matters: this drives the command menu and tab order. */
@@ -69,7 +69,7 @@ export const sections = {
   contact: {
     title: 'CONTACT',
     body: ['For exceptional founders, operators, and builders.'],
-    email: 'gregj@swsventurecap.com',
+    email: 'admin@gregjones.io',
   },
 };
 
@@ -214,7 +214,7 @@ export const askGreg = {
       match: ['reach out', 'should i reach', 'contact you', 'work with you', 'who should reach', 'pitch you', 'get in touch'],
       a: [
         'Exceptional ones. Operators who build leverage, remove friction, and let their work speak before they do.',
-        'If you are early, technical, and obsessed with systems that compound, the door is open. If you are looking for noise or validation, it is not. gregj@swsventurecap.com.',
+        'If you are early, technical, and obsessed with systems that compound, the door is open. If you are looking for noise or validation, it is not. admin@gregjones.io.',
       ],
     },
     {
